@@ -5,7 +5,7 @@
 
     <groupId>pl.codeschool.rest</groupId>
     <artifactId>Library-ajax</artifactId>
-    <packaging>jar</packaging>
+    <packaging>war</packaging>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
@@ -246,6 +246,19 @@
                         <goals><goal>copy-dependencies</goal></goals>
                     </execution>
                 </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>com.heroku.sdk</groupId>
+                <artifactId>heroku-maven-plugin</artifactId>
+                <version>3.0.2</version>
+                <configuration>
+                    <jdkVersion>1.8</jdkVersion>
+                    <processTypes>
+                        <web>java $JAVA_OPTS -cp
+                            target/classes:target/dependency/* ${mainClass}</web>
+                    </processTypes>
+                </configuration>
             </plugin>
         </plugins>
     </build>
