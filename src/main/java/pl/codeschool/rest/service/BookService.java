@@ -19,14 +19,14 @@ public class BookService {
     private final List<Book> cList = MockBookList.getInstance();
 
     @GET
-    @Path("/")
+    @Path("/all")
     @Produces(MediaType.APPLICATION_JSON)
     public List<Book> getAllBooks() {
         return cList;
     }
 
     @GET
-    @Path("{id}")
+    @Path("/find/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Book getBook(@PathParam("id") long id) {
         Optional<Book> match = cList.stream().filter(c -> c.getId() == id).findFirst();
@@ -38,7 +38,7 @@ public class BookService {
     }
 
     @POST
-    @Path("/")
+    @Path("/add")
     @Produces(MediaType.APPLICATION_JSON)
     public Response addBook(Book book) {
         MockBookList.addBook(book);
@@ -46,7 +46,7 @@ public class BookService {
     }
 
     @PUT
-    @Path("{id}")
+    @Path("/update/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Response updateBook(@Valid Book book, @PathParam("id") long id) {
         int matchIdx;
@@ -64,7 +64,7 @@ public class BookService {
     }
 
     @DELETE
-    @Path("{id}")
+    @Path("/delete/{id}")
     public Response deleteBook(@PathParam("id") long id) {
         Predicate<Book> book = b -> b.getId() == id;
         if (cList.removeIf(book)) {
