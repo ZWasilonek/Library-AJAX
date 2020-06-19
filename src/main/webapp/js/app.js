@@ -2,21 +2,29 @@ const ADDRESS = "http://localhost:8282"
 
 let form_div = $("#form_div")
 let form = $("form")
+let bookId = $("#bookId")
 let title = $("#title")
 let author = $("#author")
 let isbn = $("#isbn")
 let publisher = $("#publisher")
 let type = $("#type")
 let table = $(".table tbody")
+let formTitle = $('.book-action-title')
+let allEnteredArrayData = [title, author, isbn, publisher, type];
 
 $(() => {
     form_div.hide()
-    let allEnteredArrayData = [title, author, isbn, publisher, type];
 
     form.on("submit", (ev) => {
         ev.preventDefault()
-        if (areAllFieldsNotEmpty(allEnteredArrayData)) {
+        let validate = areAllFieldsNotEmpty(allEnteredArrayData);
+        console.log('validate', validate)
+        if (areAllFieldsNotEmpty(allEnteredArrayData) && bookId.val() !== '') {
+            this.updateBook(table, bookId, author, title, isbn, publisher, type)
+            clearFieldsErrors(allEnteredArrayData)
+        } else if (areAllFieldsNotEmpty(allEnteredArrayData)) {
             this.addBook(table, isbn, title, author, publisher, type)
+            clearFieldsErrors(allEnteredArrayData)
         } else setErrorInFields(allEnteredArrayData);
     })
     table.on('click', '.delete', (ev) => {
@@ -33,7 +41,9 @@ $(() => {
     table.on('click', '.edit', (ev) => {
         let id = $(ev.target).attr('data-id')
         let currentIsbn = $(ev.target).attr('data-isbn')
-        $('.book-action-title').html(`EDYTUJ KSIĄŻKĘ O ID ${id}`)
+        clearFieldsErrors(allEnteredArrayData)
+        console.log(isbn.val())
+        formTitle.html(`EDYTUJ KSIĄŻKĘ O ID ${id}`)
         if (form_div.is(":hidden")) {
             form_div.show()
         } else if (currentIsbn !== isbn.val()) {
@@ -41,11 +51,11 @@ $(() => {
         } else {
             form_div.hide()
         }
-        getEditBookData(id)
+        findBookById(id)
     })
 
     $("#add").on("click", () => {
-        $('.book-action-title').html('DODAJ KSIĄŻKĘ')
+        formTitle.html('DODAJ KSIĄŻKĘ')
         allEnteredArrayData.forEach((item, index, array) => {
             item.val('');
         })
@@ -60,7 +70,7 @@ $(() => {
 
 function addBook(table, isbn, title, author, publisher, type) {
     $.ajax({
-        url: ADDRESS + "/books",
+        url: ADDRESS + "/books/add",
         dataType: 'json',
         contentType: 'application/json',
         data: JSON.stringify({
@@ -81,9 +91,34 @@ function addBook(table, isbn, title, author, publisher, type) {
     })
 }
 
+function updateBook(table, id, author, title, isbn, publisher, type) {
+    $.ajax({
+        url: ADDRESS + "/books/update/" + id.val(),
+        dataType: 'json',
+        contentType: 'application/json',
+        data: JSON.stringify({
+            id: id.val(),
+            isbn: isbn.val(),
+            title: title.val(),
+            author: author.val(),
+            publisher: publisher.val(),
+            type: type.val()
+        }),
+        type: "PUT"
+    }).done(() => {
+        id.val("")
+        isbn.val("")
+        title.val("")
+        author.val("")
+        publisher.val("")
+        type.val("")
+        fetchBooks(table)
+    })
+}
+
 function fetchBooks(table) {
     $.ajax({
-        url: ADDRESS + "/books",
+        url: ADDRESS + "/books/all",
         type: "GET",
         dataType: "json"
     }).done((data) => {
@@ -99,31 +134,47 @@ function setErrorInFields(enteredInputArrayData) {
     const tooShortStrError = 'wymagane są przynajmniej 2 znaki';
     const hasDigitsError = 'w tym polu używanie cyfr jest niedozwolone'
     const notDigitsError = 'dozwolone tylko cyfry';
+    const uniqueIsbnError = 'isbn już zajęty'
+
+    function isIsbnUnique(isbnVal, enteredArrayData) {
+        return enteredArrayData.some((data, index, array) => {
+            if (data.is(isbn)) {
+                return data === isbnVal;
+            }
+        })
+    }
+
+    function setCssError(data) {
+        data.css('background-color', '#ffcccc');
+        data.val('');
+    }
 
     enteredInputArrayData.forEach((data, index, array) => {
         let inputData = data.val();
         if (inputData === '') {
-            data.css('background-color', '#ffcccc');
+            setCssError(data)
             data.attr('placeholder', emptyError);
         }
-        if (inputData !== '' && data.is('#title') && inputData.length < 2) {
-            data.css('background-color', '#ffcccc');
-            data.val('');
+        if (inputData !== '' && data.is(title) && inputData.length < 2) {
+            setCssError(data)
             data.attr('placeholder', tooShortStrError);
         }
-        if (inputData !== '' && data.is('#author') && digitRegx.test(inputData)) {
-            data.css('background-color', '#ffcccc');
-            data.val('');
+        if (inputData !== '' && data.is(author) && digitRegx.test(inputData)) {
+            setCssError(data)
             data.attr('placeholder', hasDigitsError);
         }
-        if (inputData !== '' && data.is('#isbn') && notDigitRegx.test(inputData)) {
-            data.css('background-color', '#ffcccc');
-            data.val('');
-            data.attr('placeholder', notDigitsError);
+        if (inputData !== '' && data.is(isbn)) {
+            if (!isIsbnUnique(data.val(), enteredInputArrayData)) {
+                setCssError(data)
+                data.attr('placeholder', uniqueIsbnError)
+            }
+            if (notDigitRegx.test(inputData)) {
+                setCssError(data)
+                data.attr('placeholder', notDigitsError);
+            }
         }
-        if (inputData !== '' && data.is('#type') && digitRegx.test(inputData)){
-            data.css('background-color', '#ffcccc');
-            data.val('');
+        if (inputData !== '' && data.is(type) && digitRegx.test(inputData)){
+            setCssError(data)
             data.attr('placeholder', hasDigitsError);
         }
     })
@@ -131,7 +182,7 @@ function setErrorInFields(enteredInputArrayData) {
 
 function getDetails(table, id) {
     $.ajax({
-        url: ADDRESS + "/books/" + id,
+        url: ADDRESS + "/books/find/" + id,
         type: "GET",
         dataType: "json"
     }).done((data) => {
@@ -142,7 +193,7 @@ function getDetails(table, id) {
 function showDetails(table, id, data) {
     let item = table.find("#" + id)
     if (item.html() === "") {
-        item.html(`<div>${data.title},${data.publisher}, ${data.isbn}</div>`)
+        item.html(`<div>${data.title}, ${data.publisher}, ${data.isbn}, ${data.type}</div>`)
     }
     if (item.is(":hidden")) {
         item.show(200)
@@ -155,7 +206,7 @@ function addRow(table, item) {
     let row = $(
     `<tr>
         <th scope="row">${item.id}</th>
-        <td>${item.title}</td>
+        <td class="text-wrap">${item.title}</td>
         <td>
             <button class="btn btn-info details" data-id="${item.id}">Szczegóły</button>
             <button class="btn btn-warning edit" data-id="${item.id}" data-isbn="${item.isbn}">Edytuj</button>
@@ -169,7 +220,7 @@ function addRow(table, item) {
 function deleteBook(table, id) {
 
     $.ajax({
-        url: ADDRESS + "/books/" + id,
+        url: ADDRESS + "/books/delete/" + id,
         type: "DELETE",
         dataType: "json"
     }).done(() => {
@@ -177,9 +228,9 @@ function deleteBook(table, id) {
     })
 }
 
-function getEditBookData(id) {
+function findBookById(id) {
     $.ajax({
-        url: ADDRESS + "/books/" + id,
+        url: ADDRESS + "/books/find/" + id,
         type: "GET",
         dataType: "json"
     }).done((data) => {
@@ -188,6 +239,7 @@ function getEditBookData(id) {
 }
 
 function editBook(data) {
+    bookId.val(data.id)
     title.val(data.title)
     author.val(data.author)
     isbn.val(data.isbn)
@@ -196,9 +248,19 @@ function editBook(data) {
 }
 
 function areAllFieldsNotEmpty(enteredArrayData) {
-    let result = false;
     enteredArrayData.forEach((data, index, array) => {
-        result = data.val() !== '';
+        if (data.val() !== '') {
+            data.css('background-color', 'white');
+        }
     })
-    return result;
+    return enteredArrayData.every(function(data, index, array) {
+        return data.val() !== '';
+    })
+}
+
+function clearFieldsErrors(enteredArrayData) {
+    enteredArrayData.forEach((data, index, array) => {
+        data.attr('placeholder', '');
+        data.css('background-color', 'white');
+    })
 }
