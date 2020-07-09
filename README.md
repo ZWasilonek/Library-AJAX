@@ -20,4 +20,9 @@ Aplikacja składa się z dwóch części:
     Po uruchomieniu możemy przetestować działanie tej części aplikacji pod "http://localhost:8282". <br>
     Mamy dostępne endopinty "http://localhost:8282/books" + "/all", "/find/{id}", "/add", "/delete/{id}" lub "/update/{id}".
 
-* Aby uruchomić część wizualną aplikacji należy otworzyć w przeglądarce index.html, który znajduje się w katalogu src/main/webapp lub uruchomić aplikację na lokalnym serverze (np.Tomcat).
+* Aby uruchomić część wizualną aplikacji należy otworzyć w przeglądarce index.html, który znajduje się w katalogu src/main/webapp lub uruchomić aplikację na lokalnym serverze (np.Tomcat) 
+
+## Kontakt 
+zofiawasilonek@.gmail.com<br>
+<a href="https://www.linkedin.com/in/zofia-wasilonek/">Linkedin</a>
+
