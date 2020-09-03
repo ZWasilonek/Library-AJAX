@@ -24,6 +24,6 @@ Aplikacja składa się z dwóch części:
   oraz przejść pod utworzoną ścieżkę z wybranym portem, np. http://localhost:8080 
 
 ## Kontakt 
-zofiawasilonek@.gmail.com<br>
+zofiawasilonek@gmail.com<br>
 <a href="https://www.linkedin.com/in/zofia-wasilonek/">Linkedin</a>
 
